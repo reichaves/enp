@@ -1,75 +1,78 @@
-# Sistema de Cruzamento e Auditoria de Dados — Projeto "Escravo, nem pensar!"
+# Data Matching and Audit System — "Escravo, nem pensar!" Project
 
+[![English Version](https://img.shields.io/badge/Language-English-blue.svg)](#)
+[![Versão em Português](https://img.shields.io/badge/Linguagem-Português-green.svg)](README.pt-br.md)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
 ![Pandas](https://img.shields.io/badge/Pandas-v1.3%2B-darkblue.svg)
 ![OpenPyXL](https://img.shields.io/badge/OpenPyXL-v3.0%2B-orange.svg)
-![Status](https://img.shields.io/badge/Status-Ativo-success.svg)
+![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
-Este repositório contém o ecossistema de scripts em Python projetado para o tratamento, cruzamento (merge) e auditoria sistemática de dados de trabalhadores resgatados sob condições análogas à escravidão no Brasil. 
+This repository contains the Python script ecosystem designed for cleaning, matching (merging), and auditing data related to workers rescued from slave-like conditions in Brazil.
 
-O objetivo do sistema é correlacionar informações provenientes de três bases de dados principais para consolidação e análise estruturada pela equipe do projeto **"Escravo, nem pensar!"**:
-1. **Planilha Manual de Autos**: Registros históricos inseridos manualmente pela equipe da iniciativa.
-2. **Perfil do Seguro-Desemprego**: Dados cadastrais e demográficos de trabalhadores que solicitaram o benefício após o resgate.
-3. **Radar SIT**: Cadastro oficial de fiscalizações da Subsecretaria de Inspeção do Trabalho.
+The technical goal of the system is to correlate and consolidate information from three main databases for structured analysis by the **"Escravo, nem pensar!"** project team:
+1. **Manual Inspection spreadsheet**: Historical inspection records manually compiled by the initiative's team.
+2. **Unemployment Insurance Profile**: Registrations and demographic data of rescued workers who requested unemployment benefits.
+3. **Radar SIT**: Official public database of labor inspections maintained by the Undersecretary of Labor Inspection (Subsecretaria de Inspeção do Trabalho).
 
 ---
 
-## Autor
+## Author
 
 * **Reinaldo Chaves** (reichaves@gmail.com)
   * GitHub: [@reichaves](https://github.com/reichaves)
 
 ---
 
-## Estrutura do Repositório
+## Repository Structure
 
-* `.gitignore`: Configuração para ignorar arquivos locais, ambientes virtuais e pastas contendo dados sensíveis ou resultados volumosos.
-* `cruzamento_todos_anos.py`: Script principal de limpeza, cruzamento estruturado e exportação formatada das bases.
-* `auditoria_cruzamento.py`: Script validador pós-processamento, que audita a integridade física e temporal do arquivo final gerado.
-* `auditoria_residual_2024.py`: Script focado na análise de dados que permaneceram sem correspondência com o Radar SIT no ano fiscal de 2024, efetuando o diagnóstico de CNPJs.
-* `documentacao.md`: Documentação técnica descrevendo as especificações e a lógica de processamento detalhada de cada módulo.
+* `.gitignore`: Excludes local configurations, virtual environments, raw datasets, and temporary spreadsheet results from version control.
+* `cruzamento_todos_anos.py`: Main ETL script responsible for data cleaning, hierarchical matching, and visual output formatting.
+* `auditoria_cruzamento.py`: Post-processing validation tool that verifies physical and temporal data integrity of the generated output.
+* `auditoria_residual_2024.py`: Specific audit script analyzing records from 2024 that remained unmatched against Radar SIT, generating diagnostic logs.
+* `documentacao.md`: Detailed technical documentation outlining matching logic, data definitions, and maintenance procedures.
 
-> **Observação:** As pastas `dados_2024_2025/`, `backup/` e `resultados_scripts/` contêm dados brutos de identificação e arquivos finais de trabalho que estão sob restrição de acesso e foram excluídos do controle de versão via `.gitignore`.
-
----
-
-## O que é ETL?
-
-**ETL** é a sigla para **Extract, Transform, Load** (Extrair, Transformar e Carregar). Representa um fluxo estruturado de engenharia de dados para consolidação e integração de informações:
-
-* **Extract (Extração):** Leitura das bases de dados brutas de entrada (`trabalhadores_mai22.xlsx`, `ENP - Perfil do resgatado no Brasil.xlsx` e `radarsit_mai22.xlsx`) no diretório `dados_2024_2025/`.
-* **Transform (Transformação):** Higienização de strings, padronização de CPFs/CNPJs, resolução de homônimos por proximidade temporal, cruzamento fuzzy e junção hierárquica em [cruzamento_todos_anos.py](file:///E:/code/enp/cruzamento_todos_anos.py).
-* **Load (Carregamento):** Gravação do resultado consolidado e formatado no arquivo final Excel dentro do subdiretório `resultados_scripts/`.
+> **Note:** The folders `dados_2024_2025/`, `backup/`, and `resultados_scripts/` contain sensitive PII and final spreadsheets. They are restricted from public distribution and excluded via `.gitignore`.
 
 ---
 
-## Especificações Técnicas e Lógicas de ETL
+## What is ETL?
 
-### 1. Pré-processamento e Limpeza
-* **Normalização de Textos:** Conversão automática de strings para caixa alta, remoção de caracteres acentuados (normalização Unicode NFKD) e eliminação de espaços duplicados ou marginais.
-* **Validação de Documentos:** Limpeza de pontuação de CPFs e CNPJs e preenchimento com zeros à esquerda (*padding*), garantindo tamanho fixo de 11 caracteres para pessoas físicas e 14 para pessoas jurídicas.
-* **Neutralização do "Falso Zero":** Conversão de valores vazios/indeterminados em campos de identificadores para nulos reais (`NaN`), impedindo que campos nulos cruzem com registros corrompidos ou genéricos.
+**ETL** stands for **Extract, Transform, Load**. It is a standardized data engineering pipeline designed to consolidate information from multiple sources:
 
-### 2. Cruzamento Trabalhador × Perfil do Seguro-Desemprego
-O script realiza o processamento em formato hierárquico:
-* **Fase 1:** Correspondência exata pelo nome do trabalhador.
-* **Fase 2:** Correspondência nebulosa (*fuzzy match* utilizando a distância Levenshtein com `fuzzywuzzy`) para casos remanescentes, com limite de similaridade ajustado em 90%.
-* **Desempate de Homônimos:** Havendo múltiplos candidatos (nomes idênticos ou homônimos), o sistema associa ao registro cuja "Data de Resgate" seja mais próxima da "Data de Afastamento" declarada na planilha de autos manuais. Se a diferença exceder 365 dias, o par é marcado com a sinalização `flag_data_divergente = True`.
-* **Validação de Sobrenomes:** Implementa uma trava que valida a existência de ao menos uma palavra em comum entre os sobrenomes (desconsiderando preposições), descartando falsos homônimos.
-
-### 3. Cruzamento Operação × Radar SIT
-A integração com o Radar SIT ocorre em três níveis de correspondência sob a restrição do mesmo ano fiscal do auto de infração:
-1. **Nível 3 (Prioridade Máxima):** Correspondência exata por documento (CNPJ ou CPF do empregador).
-2. **Nível 2:** Correspondência exata pelo nome limpo do estabelecimento inspecionado.
-3. **Nível 1 (Mínimo):** Correspondência de nomes administrativos (proprietário ou razão social).
-
-Os dados que não encontram par no Radar SIT não são excluídos do relatório final (mantendo-se via junção externa parcial), mas são classificados sob a flag `flag_estabelecimento = SEM_CORRESPONDENCIA_SIT`.
+* **Extract:** Reads raw datasets (`trabalhadores_mai22.xlsx`, `ENP - Perfil do resgatado no Brasil.xlsx`, and `radarsit_mai22.xlsx`) from the `dados_2024_2025/` folder.
+* **Transform:** Cleans strings, standardizes document formats (padding CPFs/CNPJs), resolves homonyms via temporal proximity, executes fuzzy matching, and builds hierarchical merges in [cruzamento_todos_anos.py](file:///E:/code/enp/cruzamento_todos_anos.py).
+* **Load:** Saves the validated, formatted spreadsheet inside the `resultados_scripts/` folder.
 
 ---
 
-## Execução e Auditorias
+## Technical Specifications and ETL Logic
 
-### Dependências Requeridas
+### 1. Pre-processing and Data Cleaning
+* **Text Normalization:** Standardizes string formats to uppercase, strips accents (Unicode NFKD normalization), and deletes double or leading/trailing spaces.
+* **Document Standardizing:** Removes non-numerical characters from CPF and CNPJ columns, adding leading zeros (*padding*) to guarantee a length of 11 characters for CPFs and 14 for CNPJs.
+* **Zero-Collision Prevention:** Converts empty or whitespace-only cells in operation number columns into proper null values (`NaN`), avoiding false links to default "0" identifiers.
+
+### 2. Worker × Unemployment Insurance Matching
+The script processes records in a strict hierarchical order:
+* **Stage 1:** Exact matching on worker name.
+* **Stage 2:** Fuzzy matching using Levenshtein distance (`fuzzywuzzy`) for remaining records, applying a strict cutoff score of 90.
+* **Homonym Resolution:** If multiple candidate records exist under the same name, the system calculates the absolute difference in days between the official "Rescue Date" and the "Inspection/Dismissal Date" from manual sheets. Only the record with the minimum temporal difference is kept.
+* **Surname Verification:** A verification function checks if the surnames (excluding prepositions) share at least one word. If they share no words, the match is discarded.
+* **Temporal Constraint:** Differences in dates exceeding 365 days are flagged as `flag_data_divergente = True`. Unmatched surnames and records exceeding 365 days are excluded.
+
+### 3. Operation × Radar SIT Matching
+The integration with Radar SIT is executed under the strict condition of matching fiscal years:
+1. **Priority 3 (Highest):** Exact matching on employer document (CNPJ or CPF).
+2. **Priority 2:** Exact matching on the cleaned establishment name.
+3. **Priority 1 (Lowest):** Cross-matching of manual business/trade names against Radar SIT owner/proprietor names.
+
+Records with no match are kept in the final dataset (via a partial outer join) to prevent data loss, flagged as `flag_estabelecimento = SEM_CORRESPONDENCIA_SIT`.
+
+---
+
+## Installation and Execution
+
+### System Dependencies
 * Python $\ge$ 3.8
 * pandas
 * openpyxl
@@ -79,32 +82,32 @@ Os dados que não encontram par no Radar SIT não são excluídos do relatório 
 * seaborn
 * plotly
 
-### Execução dos Módulos
+### Execution
 
-1. **Instalar dependências:**
+1. **Install dependencies:**
    ```bash
    pip install pandas openpyxl fuzzywuzzy python-Levenshtein matplotlib seaborn plotly
    ```
 
-2. **Processar o cruzamento completo:**
+2. **Run the data matching pipeline:**
    ```bash
    python cruzamento_todos_anos.py
    ```
 
-3. **Auditar a base gerada:**
+3. **Validate output integrity:**
    ```bash
    python auditoria_cruzamento.py
    ```
 
-4. **Gerar relatório de resíduos (Casos de 2024):**
+4. **Generate residual audit report (2024 cases):**
    ```bash
    python auditoria_residual_2024.py
    ```
 
-O script `auditoria_cruzamento.py` executará 6 testes estruturais de validação:
-* **Produto Cartesiano:** Detecta se a deduplicação de chaves falhou e se existem registros duplicados de trabalhadores associados à mesma operação.
-* **Auditoria de Homônimos:** Exibe contagens de registros únicos e fator de reincidência.
-* **Anomalia "Operação 0":** Alerta sobre falsos positivos vinculados ao registro padrão "0" do Radar SIT.
-* **Validação Temporal:** Garante que a restrição de 365 dias de diferença temporal não foi violada.
-* **Integridade do Ano Fiscal:** Garante que dados de anos fiscais divergentes não sofreram *merge* acidental.
-* **Confiabilidade:** Resume o status de consistência dos estabelecimentos cruzados (`VALIDADO_POR_CNPJ`, `COMPATIVEL`, `DIVERGENTE`, `AUSENTE`).
+The script `auditoria_cruzamento.py` runs 6 structural tests:
+* **Cartesian Product Check:** Checks if duplicate worker records exist for the same manual operation.
+* **Homonym Auditor:** Reports totals of unique names vs row counts.
+* **"Operation 0" Anomaly:** Checks if incorrect joins occurred with default SIT operation "0".
+* **Date Violation Check:** Verifies if records with temporal offsets exceeding 365 days bypassed exclusion.
+* **Fiscal Year Consistency:** Ensures no records crossed fiscal years.
+* **Establishment Conformance:** Summarizes the frequencies of `flag_estabelecimento` categories (`VALIDADO_POR_CNPJ`, `COMPATIVEL`, `DIVERGENTE`, `AUSENTE`).
