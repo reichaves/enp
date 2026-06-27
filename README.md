@@ -33,6 +33,16 @@ O objetivo do sistema é correlacionar informações provenientes de três bases
 
 ---
 
+## O que é ETL?
+
+**ETL** é a sigla para **Extract, Transform, Load** (Extrair, Transformar e Carregar). Representa um fluxo estruturado de engenharia de dados para consolidação e integração de informações:
+
+* **Extract (Extração):** Leitura das bases de dados brutas de entrada (`trabalhadores_mai22.xlsx`, `ENP - Perfil do resgatado no Brasil.xlsx` e `radarsit_mai22.xlsx`) no diretório `dados_2024_2025/`.
+* **Transform (Transformação):** Higienização de strings, padronização de CPFs/CNPJs, resolução de homônimos por proximidade temporal, cruzamento fuzzy e junção hierárquica em [cruzamento_todos_anos.py](file:///E:/code/enp/cruzamento_todos_anos.py).
+* **Load (Carregamento):** Gravação do resultado consolidado e formatado no arquivo final Excel dentro do subdiretório `resultados_scripts/`.
+
+---
+
 ## Especificações Técnicas e Lógicas de ETL
 
 ### 1. Pré-processamento e Limpeza
