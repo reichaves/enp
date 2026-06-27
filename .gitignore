@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Project-specific ignored data and results
+dados_2024_2025/
+backup/
+resultados_scripts/
+"resultados scripts/"
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
