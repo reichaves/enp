@@ -13,7 +13,7 @@ Este arquivo documenta as diretrizes e especificações do repositório para fut
 * A versão atual e válida dos algoritmos de cruzamento e auditoria de dados é a **v11**.
 * Qualquer atualização na lógica de processamento dos scripts deve ser replicada de forma sincronizada em ambos os arquivos de documentação técnica:
   * No arquivo Markdown: [documentacao.md](file:///E:/code/enp/documentacao.md)
-  * No arquivo Microsoft Word: [Documentação Técnica Lógica de Processamento do Script de Cruzamento versão 9.docx](file:///E:/code/enp/Documentação Técnica Lógica de Processamento do Script de Cruzamento versão 9.docx)
+  * No arquivo Microsoft Word: [Documentação Técnica - Lógica de Processamento (v11).docx](file:///E:/code/enp/Documentação%20Técnica%20-%20Lógica%20de%20Processamento%20(v11).docx)
 * O arquivo `.docx` deve ser manipulado em ambiente Python utilizando a biblioteca `python-docx` para preservar a estrutura de estilos.
 
 ## 3. Diretrizes de ETL e Scripts
